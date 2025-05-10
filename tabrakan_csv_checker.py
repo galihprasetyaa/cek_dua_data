@@ -22,16 +22,26 @@ if file1 and file2:
     col2_name = st.selectbox("Pilih kolom dari CSV 2", df2.columns, key="col2")
 
     if col1_name and col2_name:
-        values1 = df1[col1_name].dropna().astype(str).unique()
-        values2 = df2[col2_name].dropna().astype(str).unique()
+        # Ambil nilai dan hitung frekuensi
+        df1_counts = df1[col1_name].dropna().astype(str).value_counts()
+        df2_counts = df2[col2_name].dropna().astype(str).value_counts()
 
-        common_values = sorted(set(values1) & set(values2))
+        common_values = sorted(set(df1_counts.index) & set(df2_counts.index))
 
-        st.subheader("🔗 Nilai yang Sama di Kedua Kolom")
+        st.subheader("🔗 Nilai yang Sama dan Jumlah Kemunculannya")
         if common_values:
-            st.success(f"Ditemukan {len(common_values)} nilai yang sama.")
-            st.write(common_values)
-            csv = pd.DataFrame(common_values, columns=["Nilai Sama"]).to_csv(index=False).encode("utf-8")
-            st.download_button("⬇️ Unduh Hasil", csv, "nilai_sama.csv", "text/csv")
+            data = []
+            for val in common_values:
+                data.append({
+                    "Nilai": val,
+                    f"Jumlah di {col1_name} (CSV 1)": df1_counts[val],
+                    f"Jumlah di {col2_name} (CSV 2)": df2_counts[val],
+                })
+
+            result_df = pd.DataFrame(data)
+            st.dataframe(result_df)
+
+            csv = result_df.to_csv(index=False).encode("utf-8")
+            st.download_button("⬇️ Unduh Hasil", csv, "nilai_sama_dengan_jumlah.csv", "text/csv")
         else:
             st.warning("Tidak ditemukan nilai yang sama di kolom yang dipilih.")
